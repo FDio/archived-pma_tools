@@ -13,10 +13,10 @@
 # limitations under the License.
 
 all:
-	gcc -O1 jitter.c -fstack-protector-all -fPIC -Wformat -Wformat-security -Wl,-z,noexecstack,-z,relro,-z,now -o jitter
+	gcc -O1 jitter.c -fstack-protector-all -fPIE -Wformat -Wformat-security -Wl,-z,noexecstack,-z,relro,-z,now -o jitter
 
 pt:
-	gcc -O1 jitter.c -fstack-protector-all -fPIC -Wformat -Wformat-security -Wl,-z,noexecstack,-z,relro,-z,now -o jitter -D PROCESSOR_TRACE
+	gcc -O1 jitter.c -fstack-protector-all -fPIE -Wformat -Wformat-security -Wl,-z,noexecstack,-z,relro,-z,now -o jitter -D PROCESSOR_TRACE
 
 clean:
 	rm -f jitter
