@@ -266,6 +266,7 @@ int main(int argc, char* argv[])
 		{
 			tref=1;
 			if(SampleNo > 0)
+			{
 				printf("%10lu %10lu %10lu %10lu %10lu %10lu %13u %10lu %10u\n",
 						TransientMin,
 						TransientMax,
@@ -274,6 +275,12 @@ int main(int argc, char* argv[])
 						absoluteMax,tmp,
 						(endTime-lasttime),
 						SampleNo);
+			}
+			else
+			{
+				absoluteMax = 0;
+				absoluteMin = MINVAL;
+			}
 
 			SampleNo++;
 			lasttime = endTime;
