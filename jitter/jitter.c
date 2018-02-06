@@ -290,6 +290,7 @@ int main(int argc, char* argv[])
 						absoluteMax,tmp,
 						(endTime-lasttime),
 						SampleNo);
+				fflush(stdout);
 			}
 			else
 			{
