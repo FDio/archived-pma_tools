@@ -43,6 +43,10 @@
 #include <inttypes.h>
 #include <signal.h>
 #include <string.h>
+#define __USE_GNU
+#include <sched.h>
+
+#define DEFAULT_CORE 1
 
 union timestampclock
 {
@@ -129,8 +133,9 @@ void signalHandler(int signalno)
 void showhelp()
 {
 	printf("usage:\n");
-	printf("taskset -c ./jitter [-l] [r] [-h] [-p $(pgrep perf)] [-t]\n");
+	printf("./jitter [-c <core id>] [-l] [r] [-h] [-p $(pgrep perf)] [-t]\n");
 
+	printf("	-c : pin jitter to core_id. Default core_id is %d\n", DEFAULT_CORE);
 	printf("	-r : Display update rate. Default is %d\n", displayUpdate);
 	printf("	-l : Loop count for code block. Default is %d\n", loopcount);
 	printf("	-p : perf_pid [run: perf record -S -C$CORENO -e intel_pt// -v on another window]\n");
@@ -167,17 +172,21 @@ int main(int argc, char* argv[])
 	uint64_t absoluteMin=MINVAL, absoluteMax=0, TransientMax=0, TransientMin=MINVAL;
 	unsigned int tmp=0;
 	int userinput;
+	uint32_t core_id = DEFAULT_CORE;
+	cpu_set_t cpuset;
 #ifdef PROCESSOR_TRACE
 	pid_t perf_pid = -1;
 	int skip = 5, signaled = 0;
 #endif
 
-	printf("Linux Jitter testing program version 1.8\n");
+	printf("Linux Jitter testing program version 1.9\n");
 
-	while ((userinput = getopt(argc, argv, "l:r:hp:t:i:")) != EOF)
+	while ((userinput = getopt(argc, argv, "c:l:r:hp:t:i:")) != EOF)
 	{
 		switch(userinput)
 		{
+			case 'c' : core_id = strtoul(optarg, (char**)NULL, 0);
+				   break;
 			case 'h' : showhelp();
 				   exit(0);
 			case 'l' : loopcount = strtoul(optarg, (char**)NULL, 0);
@@ -211,6 +220,7 @@ int main(int argc, char* argv[])
 
 	printf("The pragram will execute a dummy function %u times\n",loopcount);
 	printf("Display is updated every %u displayUpdate intervals\n",displayUpdate);
+	printf("Thread affinity will be set to core_id:%u\n", core_id);
 
 	displayInfo();
 
@@ -220,6 +230,11 @@ int main(int argc, char* argv[])
 		printf("**** Error: Signal Handler is somehow not registered. Sorry, you cannot reset statistics using USR1 signal\n");
 
 	}
+
+	// set Thread affinity
+	CPU_ZERO(&cpuset);
+	CPU_SET(core_id, &cpuset);
+	sched_setaffinity(0, sizeof(cpuset), &cpuset);
 
 	printf("%s",title);
 
