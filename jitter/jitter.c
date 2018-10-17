@@ -67,6 +67,7 @@ unsigned int displayUpdate = 20000;
 unsigned int jitter_threshold = 15000;
 #endif
 unsigned int iterations = 200;
+int parseable = 0;
 
 char *title = "   Inst_Min   Inst_Max   Inst_jitter last_Exec  Abs_min    Abs_max      tmp       Interval     Sample No\n";
 
@@ -143,6 +144,7 @@ void showhelp()
 	printf("	-t : jitter threshold for perf trigger. Default is > %d cycles\n", jitter_threshold);
 #endif
 	printf("	-i : Sample counts after which program terminates. Default count is %u\n", iterations);
+	printf("	-f : Parser friendly output\n");
 	printf("For resetting statistics use:  pkill -USR1 jitter\n");
 	printf("For elevating the priority of this program try:  chrt -r -p 99 processId\n");
 
@@ -181,7 +183,7 @@ int main(int argc, char* argv[])
 
 	printf("Linux Jitter testing program version 1.9\n");
 
-	while ((userinput = getopt(argc, argv, "c:l:r:hp:t:i:")) != EOF)
+	while ((userinput = getopt(argc, argv, "c:l:r:hp:t:i:f")) != EOF)
 	{
 		switch(userinput)
 		{
@@ -215,6 +217,11 @@ int main(int argc, char* argv[])
 				   printf("jitter program did not compile with -DPROCESSOR_TRACE, cannot use Linux perf with Intel Processor Trace to record jitter source\n");
 #endif
 				   break;
+			case 'f' :
+				   title="Inst_Min,Inst_Max,Inst_jitter,last_Exec,Abs_min,Abs_max,tmp,Interval,Sample No\n";
+				   parseable=1;
+				   break;
+
 		}
 	}
 
@@ -282,6 +289,7 @@ int main(int argc, char* argv[])
 			tref=1;
 			if(SampleNo > 0)
 			{
+				if(parseable==0){
 				printf("%10lu %10lu %10lu %10lu %10lu %10lu %13u %10lu %10u\n",
 						TransientMin,
 						TransientMax,
@@ -291,6 +299,19 @@ int main(int argc, char* argv[])
 						(endTime-lasttime),
 						SampleNo);
 				fflush(stdout);
+				}
+				else{
+					//parser friendly output
+					printf("%lu,%lu,%lu,%lu,%lu,%lu,%u,%lu,%u\n",
+						TransientMin,
+						TransientMax,
+						TransientMax-TransientMin,
+						currentExectime, absoluteMin,
+						absoluteMax,tmp,
+						(endTime-lasttime),
+						SampleNo);
+				fflush(stdout);
+				}
 			}
 			else
 			{
@@ -316,7 +337,7 @@ int main(int argc, char* argv[])
 			}
 
 
-			if (!(SampleNo % 40))	// print the title every 40 lines
+			if (!(SampleNo % 40)& (parseable==0))	// print the title every 40 lines
 					printf("%s",title);
 
 		}
